@@ -35,13 +35,14 @@ fun FontPreviewScreen() {
         Pair("Serif", FontFamily.Serif),
         Pair("Cursive", FontFamily.Cursive),
         Pair("Monospace", FontFamily.Monospace)
+
     )
 
     Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
             value = titleText,
             onValueChange = { titleText = it },
-            label = { Text("Yahan Title Likhein") },
+            label = { Text("Title") },
             modifier = Modifier.fillMaxWidth()
         )
 
