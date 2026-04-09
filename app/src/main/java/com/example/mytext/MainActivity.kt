@@ -1,5 +1,7 @@
 package com.example.mytext
 
+
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,8 +13,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,9 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.*
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 
 enum class SelectedTool { SIZE, STYLE, COLOR }
 
@@ -31,8 +44,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    FontPreviewScreen()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    MyFontAppPreview()
                 }
             }
         }
@@ -41,54 +57,37 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FontPreviewScreen() {
-    var backgroundColor by remember { mutableStateOf(Color.Transparent) }
-    var borderColor by remember { mutableStateOf(Color.Transparent) }
-    var activeColorTarget by remember { mutableStateOf("Text") } // "Text", "BG", ya "Border"
+fun MyFontAppPreview() {
     var titleText by remember { mutableStateOf("") }
     var fontSize by remember { mutableFloatStateOf(28f) }
     var textColor by remember { mutableStateOf(Color.Black) }
-    var isItalic by remember { mutableStateOf(false) }
+    var backgroundColor by remember { mutableStateOf(Color.Transparent) }
+    var borderColor by remember { mutableStateOf(Color.Transparent) }
     var selectedWeight by remember { mutableStateOf(FontWeight.Normal) }
+    var isItalic by remember { mutableStateOf(false) }
     var currentTool by remember { mutableStateOf(SelectedTool.SIZE) }
-
+    var activeColorTarget by remember { mutableStateOf("Text") }
 
     val fontList = remember {
         listOf(
-
             Pair("Default", FontFamily.Default),
-
+            Pair("Serif", FontFamily.Serif),
+            Pair("Cursive", FontFamily.Cursive),
+            Pair("Monospace", FontFamily.Monospace),
             Pair("Adventure", FontFamily(Font(R.font.adventure_one))),
-            Pair("Albam", FontFamily(Font(R.font.albam_one))),
             Pair("Bebas Neue", FontFamily(Font(R.font.bebas_neue_regular))),
-            Pair("Calligraphy", FontFamily(Font(R.font.calligraphy_flf))),
             Pair("Dancing Script", FontFamily(Font(R.font.dancing_script_variable_font_wght))),
-            Pair("Lato Regular", FontFamily(Font(R.font.lato_regular))),
-            Pair("Montserrat", FontFamily(Font(R.font.montserrat_regular))),
             Pair("Pacifico", FontFamily(Font(R.font.pacifico_regular))),
             Pair("Road Rage", FontFamily(Font(R.font.road_rage))),
-            Pair("Roboto Mono", FontFamily(Font(R.font.roboto_mono_regular))),
             Pair("Unispace", FontFamily(Font(R.font.unispace_one))),
-            Pair("Acha Fsex", FontFamily(Font(R.font.acha_fsex))),
-            Pair("Adrip One", FontFamily(Font(R.font.adrip_one))),
-            Pair("Adventure Cutline", FontFamily(Font(R.font.adventure_cutline))),
-            Pair("Albam Three", FontFamily(Font(R.font.albam_three))),
-            Pair("Albam Two", FontFamily(Font(R.font.albam_two))),
-            Pair("Always Optimistic", FontFamily(Font(R.font.always_optimistic))),
-            Pair("Beautiful One", FontFamily(Font(R.font.beautiful_one))),
-            Pair("Blaize One", FontFamily(Font(R.font.blaize_one))),
-            Pair("Blazed PP", FontFamily(Font(R.font.blazed_pp))),
-            Pair("Bloodlust", FontFamily(Font(R.font.bloodlust))),
-            Pair("Bloodlust Acadital", FontFamily(Font(R.font.bloodlustacadital))),
-            Pair("Bloodlust Gradital", FontFamily(Font(R.font.bloodlustgradital))),
-            Pair("Bloodlust Ital", FontFamily(Font(R.font.bloodlustital))),
-            Pair("Bloodlust Outital", FontFamily(Font(R.font.bloodlustoutital))),
-            Pair("Bloodlust Rotal", FontFamily(Font(R.font.bloodl_ustrotal))),
-            Pair("Broadcast Titling", FontFamily(Font(R.font.broadcast_titling))),
+            Pair("Monoton", FontFamily(Font(R.font.monoton_regular))),
+            Pair("Satisfy", FontFamily(Font(R.font.satisfy_one))),
+            Pair("Playball", FontFamily(Font(R.font.playball_regular))),
             Pair("Cabin Cond Bold", FontFamily(Font(R.font.cabin_condensed_bold))),
             Pair("Cabin Cond Medium", FontFamily(Font(R.font.cabin_condensed_medium))),
             Pair("Cabin Cond Regular", FontFamily(Font(R.font.cabin_condensed_regular))),
             Pair("Cabin Cond SemiBold", FontFamily(Font(R.font.cabin_condensed_semibold))),
+            Pair("Calligraphy FLF", FontFamily(Font(R.font.calligraphy_flf))),
             Pair("Calvino Bold Ital", FontFamily(Font(R.font.calvino_bold_italic_trial))),
             Pair("Calvino Bold", FontFamily(Font(R.font.calvino_bold_trial))),
             Pair("Calvino Book Ital", FontFamily(Font(R.font.calvino_book_italic_trial))),
@@ -114,12 +113,13 @@ fun FontPreviewScreen() {
             Pair("Lato Italic", FontFamily(Font(R.font.lato_italic))),
             Pair("Lato Light", FontFamily(Font(R.font.lato_light))),
             Pair("Lato Light Ital", FontFamily(Font(R.font.lato_light_italic))),
+            Pair("Lato Regular", FontFamily(Font(R.font.lato_regular))),
             Pair("Lato Thin", FontFamily(Font(R.font.lato_thin))),
             Pair("Lato Thin Ital", FontFamily(Font(R.font.lato_thin_italic))),
             Pair("Lieselotte", FontFamily(Font(R.font.lieselotte_personal_use))),
             Pair("Marlboro One", FontFamily(Font(R.font.marlboro_one))),
-            Pair("Monoton Regular", FontFamily(Font(R.font.monoton_regular))),
             Pair("Montserrat Bold", FontFamily(Font(R.font.montserrat_bold))),
+            Pair("Montserrat Regular", FontFamily(Font(R.font.montserrat_regular))),
             Pair("Moria Cabin Regular", FontFamily(Font(R.font.moria_cabin_demo_regular))),
             Pair("Mrs Monster 3D Ital", FontFamily(Font(R.font.mrsmonster3dital))),
             Pair("Mrs Monster Acad", FontFamily(Font(R.font.mrsmonsteracad))),
@@ -137,7 +137,6 @@ fun FontPreviewScreen() {
             Pair("Mrs Monster Rotate", FontFamily(Font(R.font.mrsmonsterrotate))),
             Pair("Mrs Monster Rotate 2", FontFamily(Font(R.font.mrsmonsterrotate2))),
             Pair("Open Sans Ital", FontFamily(Font(R.font.open_sans_italic_variable_font_wdth))),
-            Pair("Playball Regular", FontFamily(Font(R.font.playball_regular))),
             Pair("Raleway Dots Regular", FontFamily(Font(R.font.raleway_dots_regular))),
             Pair("Righteous Regular", FontFamily(Font(R.font.righteous_regular))),
             Pair("Roboto Cond Bold", FontFamily(Font(R.font.roboto_condensed_bold))),
@@ -153,14 +152,14 @@ fun FontPreviewScreen() {
             Pair("Roboto Mono Light Ital", FontFamily(Font(R.font.roboto_mono_light_italic))),
             Pair("Roboto Mono Medium", FontFamily(Font(R.font.roboto_mono_medium))),
             Pair("Roboto Mono Medium Ital", FontFamily(Font(R.font.roboto_mono_medium_italic))),
+            Pair("Roboto Mono Regular", FontFamily(Font(R.font.roboto_mono_regular))),
             Pair("Roboto Mono Thin", FontFamily(Font(R.font.roboto_mono_thin))),
             Pair("Roboto Mono Thin Ital", FontFamily(Font(R.font.roboto_mono_thin_italic))),
             Pair("Roboto Slab Bold", FontFamily(Font(R.font.roboto_slab_bold))),
             Pair("Roboto Slab Light", FontFamily(Font(R.font.roboto_slab_light))),
             Pair("Roboto Slab Regular", FontFamily(Font(R.font.roboto_slab_regular))),
             Pair("Roboto Slab Thin", FontFamily(Font(R.font.roboto_slab_thin))),
-            Pair("Redoka One Regular", FontFamily(Font(R.font.rredoka_one_regular))),
-            Pair("Satisfy One", FontFamily(Font(R.font.satisfy_one))),
+            Pair("Redoka One", FontFamily(Font(R.font.rredoka_one_regular))),
             Pair("Starlight One", FontFamily(Font(R.font.starlight_one))),
             Pair("Telex Regular", FontFamily(Font(R.font.telex_regular))),
             Pair("Unispace Bold", FontFamily(Font(R.font.unispace_bold))),
@@ -169,118 +168,84 @@ fun FontPreviewScreen() {
             Pair("Wedgie Regular", FontFamily(Font(R.font.wedgie_regular))),
             Pair("Where My Keys", FontFamily(Font(R.font.where_my_keys))),
             Pair("Aca Flft", FontFamily(Font(R.font.aca_flft))),
-            Pair("Acha Fout", FontFamily(Font(R.font.acha_fout)))
-
-
+            Pair("Acha Fout", FontFamily(Font(R.font.acha_fout))),
+            Pair("Acha Fsex", FontFamily(Font(R.font.acha_fsex))),
+            Pair("Adrip One", FontFamily(Font(R.font.adrip_one))),
+            Pair("Adventure Cutline", FontFamily(Font(R.font.adventure_cutline))),
+            Pair("Albam One", FontFamily(Font(R.font.albam_one))),
+            Pair("Albam Two", FontFamily(Font(R.font.albam_two))),
+            Pair("Albam Three", FontFamily(Font(R.font.albam_three))),
+            Pair("Always Optimistic", FontFamily(Font(R.font.always_optimistic))),
+            Pair("Beautiful One", FontFamily(Font(R.font.beautiful_one))),
+            Pair("Blaize One", FontFamily(Font(R.font.blaize_one))),
+            Pair("Blazed PP", FontFamily(Font(R.font.blazed_pp))),
+            Pair("Bloodlust", FontFamily(Font(R.font.bloodlust))),
+            Pair("Bloodlust Rotal", FontFamily(Font(R.font.bloodl_ustrotal))),
+            Pair("Bloodlust Acadital", FontFamily(Font(R.font.bloodlustacadital))),
+            Pair("Bloodlust Gradital", FontFamily(Font(R.font.bloodlustgradital))),
+            Pair("Bloodlust Ital", FontFamily(Font(R.font.bloodlustital))),
+            Pair("Bloodlust Outital", FontFamily(Font(R.font.bloodlustoutital))),
+            Pair("Broadcast Titling", FontFamily(Font(R.font.broadcast_titling)))
         )
     }
 
     val weights = listOf(
         "Thin" to FontWeight.Thin,
-        "Light" to FontWeight.Light,
         "Regular" to FontWeight.Normal,
         "Medium" to FontWeight.Medium,
-        "SemiBold" to FontWeight.SemiBold,
         "Bold" to FontWeight.Bold,
         "Black" to FontWeight.Black
     )
 
     val colorList = listOf(
-        Color.Black, Color.Red, Color.Blue, Color(0xFF4CAF50), Color.Magenta,
-        Color.Cyan, Color.Gray, Color(0xFFFF9800), Color(0xFF795548), Color(0xFF9C27B0),
-        Color(0xFFFFEB3B), Color(0xFF00BCD4), Color(0xFFE91E63)
+        Color.Black, Color.White, Color.Red, Color.Blue, Color(0xFF4CAF50),
+        Color.Magenta, Color.Cyan, Color.Gray, Color(0xFFFF9800),
+        Color(0xFF9C27B0), Color(0xFFFFEB3B), Color.Transparent
     )
 
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.background(Color.White)) {
-                // --- Settings Panel ---
+                HorizontalDivider()
                 Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-
                     when (currentTool) {
-
                         SelectedTool.SIZE -> {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                // Minus Button
-                                IconButton(
-                                    onClick = { if (fontSize > 10) fontSize -= 2f },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(Icons.Default.Remove, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
-                                }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { if (fontSize > 10) fontSize -= 2f }) { Icon(Icons.Default.Remove, null) }
 
-                                // Thin Slider
+                                // --- MEDIUM SLIDER FIXED ---
                                 Slider(
                                     value = fontSize,
                                     onValueChange = { fontSize = it },
                                     valueRange = 10f..120f,
                                     modifier = Modifier.weight(1f).height(20.dp),
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = Color(0xFF6750A4),
-                                        activeTrackColor = Color(0xFF6750A4),
-                                        inactiveTrackColor = Color(0xFFE0E0E0),
-                                    ),
                                     track = { sliderState ->
                                         SliderDefaults.Track(
                                             sliderState = sliderState,
-                                            modifier = Modifier.height(6.dp),
-                                            thumbTrackGapSize = 0.dp
+                                            modifier = Modifier.height(6.dp) // <--- Medium thickness
                                         )
                                     }
                                 )
 
-                                // Plus Button
-                                IconButton(
-                                    onClick = { if (fontSize < 120) fontSize += 2f },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(Icons.Default.Add, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
-                                }
-
-                                // Font Size Display
-                                Surface(color = Color(0xFFF0F0F0), shape = CircleShape, modifier = Modifier.padding(start = 8.dp)) {
-                                    Text(
-                                        text = "${fontSize.toInt()}",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.DarkGray
-                                    )
-                                }
+                                IconButton(onClick = { if (fontSize < 120) fontSize += 2f }) { Icon(Icons.Default.Add, null) }
+                                Text("${fontSize.toInt()}sp")
                             }
-                        } // SelectedTool.SIZE ka end
+                        }
                         SelectedTool.COLOR -> {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                // Selector: Text, BG, ya Border chunne ke liye
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     listOf("Text", "BG", "Border").forEach { target ->
-                                        FilterChip(
-                                            selected = activeColorTarget == target,
-                                            onClick = { activeColorTarget = target },
-                                            label = { Text(target, fontSize = 11.sp) }
-                                        )
+                                        FilterChip(selected = activeColorTarget == target, onClick = { activeColorTarget = target }, label = { Text(target) })
                                     }
                                 }
-
                                 Spacer(modifier = Modifier.height(8.dp))
-
-                                // Color List
                                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     items(colorList) { color ->
                                         Box(
-                                            modifier = Modifier
-                                                .size(35.dp)
-                                                .clip(CircleShape)
-                                                .background(if(color == Color.Transparent) Color.LightGray.copy(alpha = 0.3f) else color)
-                                                .border(2.dp, if( (activeColorTarget == "Text" && textColor == color) || (activeColorTarget == "BG" && backgroundColor == color) || (activeColorTarget == "Border" && borderColor == color) ) Color.Black else Color.Transparent, CircleShape)
+                                            modifier = Modifier.size(35.dp).clip(CircleShape).background(if (color == Color.Transparent) Color.LightGray.copy(0.3f) else color)
+                                                .border(2.dp, if ((activeColorTarget == "Text" && textColor == color) || (activeColorTarget == "BG" && backgroundColor == color) || (activeColorTarget == "Border" && borderColor == color)) Color.Blue else Color.LightGray, CircleShape)
                                                 .clickable {
-                                                    // Chunne huye target ke hisab se color set hoga
-                                                    when(activeColorTarget) {
+                                                    when (activeColorTarget) {
                                                         "Text" -> textColor = color
                                                         "BG" -> backgroundColor = color
                                                         "Border" -> borderColor = color
@@ -293,96 +258,51 @@ fun FontPreviewScreen() {
                         }
                         SelectedTool.STYLE -> {
                             Column {
-                                // Weight Row
                                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     items(weights) { (name, weight) ->
-                                        FilterChip(
-                                            selected = selectedWeight == weight,
-                                            onClick = { selectedWeight = weight },
-                                            label = { Text(name, fontSize = 12.sp) }
-                                        )
+                                        FilterChip(selected = selectedWeight == weight, onClick = { selectedWeight = weight }, label = { Text(name) })
                                     }
                                 }
-                                // Italic Toggle
-                                FilterChip(
-                                    selected = isItalic,
-                                    onClick = { isItalic = !isItalic },
-                                    label = { Text("Italic") },
-                                    leadingIcon = { if(isItalic) Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
-                                )
+                                FilterChip(selected = isItalic, onClick = { isItalic = !isItalic }, label = { Text("Italic") }, leadingIcon = { if(isItalic) Icon(Icons.Default.Check, null) })
                             }
                         }
                     }
                 }
-
-                Divider()
-
-                // --- Navigation Tabs ---
                 NavigationBar(containerColor = Color.White) {
-                    NavigationBarItem(
-                        selected = currentTool == SelectedTool.SIZE,
-                        onClick = { currentTool = SelectedTool.SIZE },
-                        icon = { Icon(Icons.Default.TextFields, "Size") },
-                        label = { Text("Size") }
-                    )
-                    NavigationBarItem(
-                        selected = currentTool == SelectedTool.STYLE,
-                        onClick = { currentTool = SelectedTool.STYLE },
-                        icon = { Icon(Icons.Default.FormatBold, "Weight") },
-                        label = { Text("Style") }
-                    )
-                    NavigationBarItem(
-                        selected = currentTool == SelectedTool.COLOR,
-                        onClick = { currentTool = SelectedTool.COLOR },
-                        icon = { Icon(Icons.Default.Palette, "Color") },
-                        label = { Text("Color") }
-                    )
+                    NavigationBarItem(selected = currentTool == SelectedTool.SIZE, onClick = { currentTool = SelectedTool.SIZE }, icon = { Icon(Icons.Default.TextFields, null) }, label = { Text("Size") })
+                    NavigationBarItem(selected = currentTool == SelectedTool.STYLE, onClick = { currentTool = SelectedTool.STYLE }, icon = { Icon(Icons.Default.FormatBold, null) }, label = { Text("Style") })
+                    NavigationBarItem(selected = currentTool == SelectedTool.COLOR, onClick = { currentTool = SelectedTool.COLOR }, icon = { Icon(Icons.Default.Palette, null) }, label = { Text("Color") })
                 }
             }
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
-            OutlinedTextField(
-                value = titleText,
-                onValueChange = { titleText = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Type something to preview...") }
-            )
-
+            OutlinedTextField(value = titleText, onValueChange = { titleText = it }, label = { Text("Enter Title") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
-
-            // --- The Big Font List ---
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(fontList) { fontItem ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                        text = fontItem.first,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = titleText.ifEmpty { "Text Generator" },
-                                modifier = Modifier
-                                    .background(backgroundColor)   // <--- BG Color yahan se aayega
-                                    .border(1.dp, borderColor)      // <--- Border Color yahan se aayega
-                                    .padding(8.dp),                 // Padding taaki BG saaf dikhe
-                                style = TextStyle(
-                                    fontFamily = fontItem.second,
-                                    fontSize = fontSize.sp,
-                                    color = textColor,
-                                    fontWeight = selectedWeight,
-                                    fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(text = fontItem.first, fontSize = 11.sp, color = Color.Gray)
+                            Box(
+                                modifier = Modifier.fillMaxWidth().background(backgroundColor, RoundedCornerShape(8.dp)).border(1.dp, borderColor, RoundedCornerShape(8.dp)).padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = titleText.ifEmpty { "Text Generator" },
+                                    modifier = Modifier
+                                        .fillMaxWidth()            // 1. पूरी चौड़ाई लें
+                                        .padding(horizontal = 4.dp, vertical = 2.dp), // 2. साइड से थोड़ी जगह छोड़ने के लिए
+                                    textAlign = TextAlign.Start,   // 3. Text को Left side में करने के लिए
+                                    style = TextStyle(
+                                        fontFamily = fontItem.second,
+                                        fontSize = fontSize.sp,
+                                        color = textColor,
+                                        fontWeight = selectedWeight,
+                                        fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }
