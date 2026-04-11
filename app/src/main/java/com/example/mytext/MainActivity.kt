@@ -1,54 +1,58 @@
 package com.example.mytext
 
-
-
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.FormatBold
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 
+// --- List of all 31 Colors ---
+val myCustomPalette = listOf(
+    Color(0xFF1AD8FF), Color(0xFF10D0F8), Color(0xFF086073), Color(0xFF07FD49), Color(0xFF0AB337),
+    Color(0xFFF50808), Color(0xFFFF0683), Color(0xFFEF083A), Color(0xFFB6072D), Color(0xFF0E39FA),
+    Color(0xFF0425B8), Color(0xFF030E3B), Color(0xFF3A3A3D), Color(0xFFF94007), Color(0xFFEC4310),
+    Color(0xFFF5FD0B), Color(0xFFFF8B06), Color(0xFF19E81C), Color(0xFFFE007F), Color(0xFFFFA305),
+    Color(0xFF9D6606), Color(0xFF0DD2FB), Color(0xFFFB0606), Color(0xFFA8F906), Color(0xFF38FF06),
+    Color(0xFF0AC0F8), Color(0xFF0648FE), Color(0xFF491AF5), Color(0xFF8907F4), Color(0xFFFC0432),
+    Color(0xFFFFFFFF), Color(0xFF000000)
+)
 
-enum class SelectedTool { SIZE, STYLE, COLOR }
+data class MyFont(val name: String, val family: FontFamily)
+enum class AppTool { FONT, COLOR, STYLE, CASE, COMBO, BG, MAGIC, EXPORT }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MyFontAppPreview()
+            MaterialTheme(colorScheme = lightColorScheme(primary = Color(0xFFE91E63))) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFFF8F9FA)) {
+                    TextArtApp()
                 }
             }
         }
@@ -57,256 +61,419 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyFontAppPreview() {
-    var titleText by remember { mutableStateOf("") }
-    var fontSize by remember { mutableFloatStateOf(28f) }
-    var textColor by remember { mutableStateOf(Color.Black) }
-    var backgroundColor by remember { mutableStateOf(Color.Transparent) }
-    var borderColor by remember { mutableStateOf(Color.Transparent) }
-    var selectedWeight by remember { mutableStateOf(FontWeight.Normal) }
-    var isItalic by remember { mutableStateOf(false) }
-    var currentTool by remember { mutableStateOf(SelectedTool.SIZE) }
-    var activeColorTarget by remember { mutableStateOf("Text") }
+fun TextArtApp() {
+    val context = LocalContext.current
+    var titleText by remember { mutableStateOf("रूह-ए-इश्क Mafia King") }
+    var currentTool by remember { mutableStateOf(AppTool.FONT) }
 
-    val fontList = remember {
+    var fontSize by remember { mutableFloatStateOf(15f) }
+    var textColor by remember { mutableStateOf(Color.Black) }
+    var bgColor by remember { mutableStateOf(Color.White) }
+    var useGradient by remember { mutableStateOf(false) }
+    var useShadow by remember { mutableStateOf(false) }
+    var useGlow by remember { mutableStateOf(false) }
+    var textCase by remember { mutableIntStateOf(0) }
+    var selectedFancyStyle by remember { mutableStateOf("None") }
+    var activeComboMode by remember { mutableIntStateOf(0) }
+    var fontA by remember { mutableStateOf<FontFamily>(FontFamily.Default) }
+    var fontB by remember { mutableStateOf<FontFamily>(FontFamily.Serif) }
+
+    // --- State for Selection Mode ---
+    var isSelectionMode by remember { mutableStateOf(false) }
+    val selectedIndices = remember { mutableStateMapOf<Int, Boolean>() }
+
+    val fullFontList = remember {
         listOf(
-            Pair("Default", FontFamily.Default),
-            Pair("Serif", FontFamily.Serif),
-            Pair("Cursive", FontFamily.Cursive),
-            Pair("Monospace", FontFamily.Monospace),
-            Pair("Adventure", FontFamily(Font(R.font.adventure_one))),
-            Pair("Bebas Neue", FontFamily(Font(R.font.bebas_neue_regular))),
-            Pair("Dancing Script", FontFamily(Font(R.font.dancing_script_variable_font_wght))),
-            Pair("Pacifico", FontFamily(Font(R.font.pacifico_regular))),
-            Pair("Road Rage", FontFamily(Font(R.font.road_rage))),
-            Pair("Unispace", FontFamily(Font(R.font.unispace_one))),
-            Pair("Monoton", FontFamily(Font(R.font.monoton_regular))),
-            Pair("Satisfy", FontFamily(Font(R.font.satisfy_one))),
-            Pair("Playball", FontFamily(Font(R.font.playball_regular))),
-            Pair("Cabin Cond Bold", FontFamily(Font(R.font.cabin_condensed_bold))),
-            Pair("Cabin Cond Medium", FontFamily(Font(R.font.cabin_condensed_medium))),
-            Pair("Cabin Cond Regular", FontFamily(Font(R.font.cabin_condensed_regular))),
-            Pair("Cabin Cond SemiBold", FontFamily(Font(R.font.cabin_condensed_semibold))),
-            Pair("Calligraphy FLF", FontFamily(Font(R.font.calligraphy_flf))),
-            Pair("Calvino Bold Ital", FontFamily(Font(R.font.calvino_bold_italic_trial))),
-            Pair("Calvino Bold", FontFamily(Font(R.font.calvino_bold_trial))),
-            Pair("Calvino Book Ital", FontFamily(Font(R.font.calvino_book_italic_trial))),
-            Pair("Calvino Book", FontFamily(Font(R.font.calvino_book_trial))),
-            Pair("Calvino Extra Bold", FontFamily(Font(R.font.calvino_extra_bold_trial))),
-            Pair("Calvino Grande EL Ital", FontFamily(Font(R.font.calvino_grande_extralight_italic_trial))),
-            Pair("Calvino Grande EL", FontFamily(Font(R.font.calvino_grande_extralight_trial))),
-            Pair("Calvino Grande Light", FontFamily(Font(R.font.calvino_grande_light_trial))),
-            Pair("Calvino Light Ital", FontFamily(Font(R.font.calvino_light_italic_trial))),
-            Pair("Calvino Regular", FontFamily(Font(R.font.calvino_regular_trial))),
-            Pair("Calvino SemiBold Ital", FontFamily(Font(R.font.calvino_semibold_italic_trial))),
-            Pair("Calvino Thin Ital", FontFamily(Font(R.font.calvino_thin_italic_trial))),
-            Pair("Calvino Thin", FontFamily(Font(R.font.calvino_thin_trial))),
-            Pair("Eat At Joes", FontFamily(Font(R.font.eat_at_joes))),
-            Pair("Fade To Grey", FontFamily(Font(R.font.fade_to_grey))),
-            Pair("Flames One", FontFamily(Font(R.font.flames_one))),
-            Pair("Goldman Bold", FontFamily(Font(R.font.goldman_bold))),
-            Pair("Goldman Regular", FontFamily(Font(R.font.goldman_regular))),
-            Pair("Guewara One", FontFamily(Font(R.font.guewara_one))),
-            Pair("Lato Black", FontFamily(Font(R.font.lato_black))),
-            Pair("Lato Bold", FontFamily(Font(R.font.lato_bold))),
-            Pair("Lato Bold Ital", FontFamily(Font(R.font.lato_bold_italil))),
-            Pair("Lato Italic", FontFamily(Font(R.font.lato_italic))),
-            Pair("Lato Light", FontFamily(Font(R.font.lato_light))),
-            Pair("Lato Light Ital", FontFamily(Font(R.font.lato_light_italic))),
-            Pair("Lato Regular", FontFamily(Font(R.font.lato_regular))),
-            Pair("Lato Thin", FontFamily(Font(R.font.lato_thin))),
-            Pair("Lato Thin Ital", FontFamily(Font(R.font.lato_thin_italic))),
-            Pair("Lieselotte", FontFamily(Font(R.font.lieselotte_personal_use))),
-            Pair("Marlboro One", FontFamily(Font(R.font.marlboro_one))),
-            Pair("Montserrat Bold", FontFamily(Font(R.font.montserrat_bold))),
-            Pair("Montserrat Regular", FontFamily(Font(R.font.montserrat_regular))),
-            Pair("Moria Cabin Regular", FontFamily(Font(R.font.moria_cabin_demo_regular))),
-            Pair("Mrs Monster 3D Ital", FontFamily(Font(R.font.mrsmonster3dital))),
-            Pair("Mrs Monster Acad", FontFamily(Font(R.font.mrsmonsteracad))),
-            Pair("Mrs Monster Bold Out", FontFamily(Font(R.font.mrsmonsterboldout))),
-            Pair("Mrs Monster Bold Out Ital", FontFamily(Font(R.font.mrsmonsterboldoutital))),
-            Pair("Mrs Monster Cond", FontFamily(Font(R.font.mrsmonstercond))),
-            Pair("Mrs Monster Cond Ital", FontFamily(Font(R.font.mrsmonstercondital))),
-            Pair("Mrs Monster Expand", FontFamily(Font(R.font.mrsmonsterexpand))),
-            Pair("Mrs Monster Expand Ital", FontFamily(Font(R.font.mrsmonsterexpandital))),
-            Pair("Mrs Monster Ital", FontFamily(Font(R.font.mrsmonsterital))),
-            Pair("Mrs Monster Left", FontFamily(Font(R.font.mrsmonsterleft))),
-            Pair("Mrs Monster Out", FontFamily(Font(R.font.mrsmonsterout))),
-            Pair("Mrs Monster Out Ital", FontFamily(Font(R.font.mrsmonsteroutital))),
-            Pair("Mrs Monster Rotal", FontFamily(Font(R.font.mrsmonsterrotal))),
-            Pair("Mrs Monster Rotate", FontFamily(Font(R.font.mrsmonsterrotate))),
-            Pair("Mrs Monster Rotate 2", FontFamily(Font(R.font.mrsmonsterrotate2))),
-            Pair("Open Sans Ital", FontFamily(Font(R.font.open_sans_italic_variable_font_wdth))),
-            Pair("Raleway Dots Regular", FontFamily(Font(R.font.raleway_dots_regular))),
-            Pair("Righteous Regular", FontFamily(Font(R.font.righteous_regular))),
-            Pair("Roboto Cond Bold", FontFamily(Font(R.font.roboto_condensed_bold))),
-            Pair("Roboto Cond Bold Ital", FontFamily(Font(R.font.roboto_condensed_bold_italic))),
-            Pair("Roboto Cond Ital", FontFamily(Font(R.font.roboto_condensed_italic))),
-            Pair("Roboto Cond Light", FontFamily(Font(R.font.roboto_condensed_light))),
-            Pair("Roboto Cond Light Ital", FontFamily(Font(R.font.roboto_condensed_light_italic))),
-            Pair("Roboto Cond Regular", FontFamily(Font(R.font.roboto_condensed_regular))),
-            Pair("Roboto Mono Bold", FontFamily(Font(R.font.roboto_mono_bold))),
-            Pair("Roboto Mono Bold Ital", FontFamily(Font(R.font.roboto_mono_bold_italic))),
-            Pair("Roboto Mono Ital", FontFamily(Font(R.font.roboto_mono_italic))),
-            Pair("Roboto Mono Light", FontFamily(Font(R.font.roboto_mono_light))),
-            Pair("Roboto Mono Light Ital", FontFamily(Font(R.font.roboto_mono_light_italic))),
-            Pair("Roboto Mono Medium", FontFamily(Font(R.font.roboto_mono_medium))),
-            Pair("Roboto Mono Medium Ital", FontFamily(Font(R.font.roboto_mono_medium_italic))),
-            Pair("Roboto Mono Regular", FontFamily(Font(R.font.roboto_mono_regular))),
-            Pair("Roboto Mono Thin", FontFamily(Font(R.font.roboto_mono_thin))),
-            Pair("Roboto Mono Thin Ital", FontFamily(Font(R.font.roboto_mono_thin_italic))),
-            Pair("Roboto Slab Bold", FontFamily(Font(R.font.roboto_slab_bold))),
-            Pair("Roboto Slab Light", FontFamily(Font(R.font.roboto_slab_light))),
-            Pair("Roboto Slab Regular", FontFamily(Font(R.font.roboto_slab_regular))),
-            Pair("Roboto Slab Thin", FontFamily(Font(R.font.roboto_slab_thin))),
-            Pair("Redoka One", FontFamily(Font(R.font.rredoka_one_regular))),
-            Pair("Starlight One", FontFamily(Font(R.font.starlight_one))),
-            Pair("Telex Regular", FontFamily(Font(R.font.telex_regular))),
-            Pair("Unispace Bold", FontFamily(Font(R.font.unispace_bold))),
-            Pair("Unispace Bold Ital", FontFamily(Font(R.font.unispace_bold_italic))),
-            Pair("Unispace Ital", FontFamily(Font(R.font.unispace_italic))),
-            Pair("Wedgie Regular", FontFamily(Font(R.font.wedgie_regular))),
-            Pair("Where My Keys", FontFamily(Font(R.font.where_my_keys))),
-            Pair("Aca Flft", FontFamily(Font(R.font.aca_flft))),
-            Pair("Acha Fout", FontFamily(Font(R.font.acha_fout))),
-            Pair("Acha Fsex", FontFamily(Font(R.font.acha_fsex))),
-            Pair("Adrip One", FontFamily(Font(R.font.adrip_one))),
-            Pair("Adventure Cutline", FontFamily(Font(R.font.adventure_cutline))),
-            Pair("Albam One", FontFamily(Font(R.font.albam_one))),
-            Pair("Albam Two", FontFamily(Font(R.font.albam_two))),
-            Pair("Albam Three", FontFamily(Font(R.font.albam_three))),
-            Pair("Always Optimistic", FontFamily(Font(R.font.always_optimistic))),
-            Pair("Beautiful One", FontFamily(Font(R.font.beautiful_one))),
-            Pair("Blaize One", FontFamily(Font(R.font.blaize_one))),
-            Pair("Blazed PP", FontFamily(Font(R.font.blazed_pp))),
-            Pair("Bloodlust", FontFamily(Font(R.font.bloodlust))),
-            Pair("Bloodlust Rotal", FontFamily(Font(R.font.bloodl_ustrotal))),
-            Pair("Bloodlust Acadital", FontFamily(Font(R.font.bloodlustacadital))),
-            Pair("Bloodlust Gradital", FontFamily(Font(R.font.bloodlustgradital))),
-            Pair("Bloodlust Ital", FontFamily(Font(R.font.bloodlustital))),
-            Pair("Bloodlust Outital", FontFamily(Font(R.font.bloodlustoutital))),
-            Pair("Broadcast Titling", FontFamily(Font(R.font.broadcast_titling)))
+            MyFont("Default", FontFamily.Default),
+            MyFont("Kalam Bold", FontFamily(Font(R.font.kalam_bold))),
+            MyFont("Amita", FontFamily(Font(R.font.amita_regular))),
+            MyFont("Rozha One", FontFamily(Font(R.font.rozha_one_regular))),
+            MyFont("Bebas Neue", FontFamily(Font(R.font.bebas_neue_regular))),
+            MyFont("Pacifico", FontFamily(Font(R.font.pacifico_regular))),
+            MyFont("Poppins Bold", FontFamily(Font(R.font.poppins_bold))),
+            MyFont("Bloodlust", FontFamily(Font(R.font.bloodlustital))),
+            MyFont("Monoton", FontFamily(Font(R.font.monoton_regular))),
+            MyFont("Beautiful One", FontFamily(Font(R.font.beautiful_one))),
+            MyFont("Blaize One", FontFamily(Font(R.font.blaize_one))),
+            MyFont("Blazed PP", FontFamily(Font(R.font.blazed_pp))),
+            MyFont("Bloodlust Rotal", FontFamily(Font(R.font.bloodl_ustrotal))),
+            MyFont("Bloodlust Acad", FontFamily(Font(R.font.bloodlustacadital))),
+            MyFont("Bloodlust Grad", FontFamily(Font(R.font.bloodlustgradital))),
+            MyFont("Bloodlust Out", FontFamily(Font(R.font.bloodlustoutital))),
+            MyFont("Broadcast", FontFamily(Font(R.font.broadcast_titling))),
+            MyFont("Cabin Bold", FontFamily(Font(R.font.cabin_condensed_bold))),
+            MyFont("Cabin Medium", FontFamily(Font(R.font.cabin_condensed_medium))),
+            MyFont("Cabin Regular", FontFamily(Font(R.font.cabin_condensed_regular))),
+            MyFont("Cabin SemiBold", FontFamily(Font(R.font.cabin_condensed_semibold))),
+            MyFont("Calligraphy", FontFamily(Font(R.font.calligraphy_flf))),
+            MyFont("Calvino Bold Ital", FontFamily(Font(R.font.calvino_bold_italic_trial))),
+            MyFont("Calvino Bold", FontFamily(Font(R.font.calvino_bold_trial))),
+            MyFont("Calvino Book Ital", FontFamily(Font(R.font.calvino_book_italic_trial))),
+            MyFont("Calvino Book", FontFamily(Font(R.font.calvino_book_trial))),
+            MyFont("Calvino Extra Bold", FontFamily(Font(R.font.calvino_extra_bold_trial))),
+            MyFont("Calvino Grande Light Ital", FontFamily(Font(R.font.calvino_grande_extralight_italic_trial))),
+            MyFont("Calvino Grande Light", FontFamily(Font(R.font.calvino_grande_extralight_trial))),
+            MyFont("Calvino Grande Regular", FontFamily(Font(R.font.calvino_grande_light_trial))),
+            MyFont("Calvino Light Ital", FontFamily(Font(R.font.calvino_light_italic_trial))),
+            MyFont("Calvino Regular", FontFamily(Font(R.font.calvino_regular_trial))),
+            MyFont("Calvino SemiBold Ital", FontFamily(Font(R.font.calvino_semibold_italic_trial))),
+            MyFont("Calvino Thin Ital", FontFamily(Font(R.font.calvino_thin_italic_trial))),
+            MyFont("Calvino Thin", FontFamily(Font(R.font.calvino_thin_trial))),
+            MyFont("Dancing Script", FontFamily(Font(R.font.dancing_script_variable_font_wght))),
+            MyFont("Eat At Joes", FontFamily(Font(R.font.eat_at_joes))),
+            MyFont("Fade To Grey", FontFamily(Font(R.font.fade_to_grey))),
+            MyFont("Flames One", FontFamily(Font(R.font.flames_one))),
+            MyFont("Goldman Bold", FontFamily(Font(R.font.goldman_bold))),
+            MyFont("Goldman Regular", FontFamily(Font(R.font.goldman_regular))),
+            MyFont("Guewara One", FontFamily(Font(R.font.guewara_one))),
+            MyFont("Hind Bold", FontFamily(Font(R.font.hind_bold))),
+            MyFont("Hind Medium", FontFamily(Font(R.font.hind_medium))),
+            MyFont("Hind Regular", FontFamily(Font(R.font.hind_regular))),
+            MyFont("Hind SemiBold", FontFamily(Font(R.font.hind_semibold))),
+            MyFont("Kalam Light", FontFamily(Font(R.font.kalam_light))),
+            MyFont("Kalam Regular", FontFamily(Font(R.font.kalam_regular))),
+            MyFont("Lato Black", FontFamily(Font(R.font.lato_black))),
+            MyFont("Lato Bold", FontFamily(Font(R.font.lato_bold))),
+            MyFont("Lato Bold Ital", FontFamily(Font(R.font.lato_bold_italil))),
+            MyFont("Lato Ital", FontFamily(Font(R.font.lato_italic))),
+            MyFont("Lato Light", FontFamily(Font(R.font.lato_light))),
+            MyFont("Lato Light Ital", FontFamily(Font(R.font.lato_light_italic))),
+            MyFont("Lato Regular", FontFamily(Font(R.font.lato_regular))),
+            MyFont("Lato Thin", FontFamily(Font(R.font.lato_thin))),
+            MyFont("Lato Thin Ital", FontFamily(Font(R.font.lato_thin_italic))),
+            MyFont("Lieselotte", FontFamily(Font(R.font.lieselotte_personal_use))),
+            MyFont("Marlboro One", FontFamily(Font(R.font.marlboro_one))),
+            MyFont("Montserrat Bold", FontFamily(Font(R.font.montserrat_bold))),
+            MyFont("Montserrat Regular", FontFamily(Font(R.font.montserrat_regular))),
+            MyFont("Moria Cabin", FontFamily(Font(R.font.moria_cabin_demo_regular))),
+            MyFont("MrsMonster 3D", FontFamily(Font(R.font.mrsmonster3dital))),
+            MyFont("MrsMonster Acad", FontFamily(Font(R.font.mrsmonsteracad))),
+            MyFont("MrsMonster BoldOut", FontFamily(Font(R.font.mrsmonsterboldout))),
+            MyFont("MrsMonster BoldOut Ital", FontFamily(Font(R.font.mrsmonsterboldoutital))),
+            MyFont("MrsMonster Cond", FontFamily(Font(R.font.mrsmonstercond))),
+            MyFont("MrsMonster Cond Ital", FontFamily(Font(R.font.mrsmonstercondital))),
+            MyFont("MrsMonster Expand", FontFamily(Font(R.font.mrsmonsterexpand))),
+            MyFont("MrsMonster Expand Ital", FontFamily(Font(R.font.mrsmonsterexpandital))),
+            MyFont("MrsMonster Ital", FontFamily(Font(R.font.mrsmonsterital))),
+            MyFont("MrsMonster Left", FontFamily(Font(R.font.mrsmonsterleft))),
+            MyFont("MrsMonster Out", FontFamily(Font(R.font.mrsmonsterout))),
+            MyFont("MrsMonster Out Ital", FontFamily(Font(R.font.mrsmonsteroutital))),
+            MyFont("MrsMonster Rotal", FontFamily(Font(R.font.mrsmonsterrotal))),
+            MyFont("MrsMonster Rotate", FontFamily(Font(R.font.mrsmonsterrotate))),
+            MyFont("MrsMonster Rotate2", FontFamily(Font(R.font.mrsmonsterrotate2))),
+            MyFont("Mukta Bold", FontFamily(Font(R.font.mukta_bold))),
+            MyFont("Mukta Medium", FontFamily(Font(R.font.mukta_medium))),
+            MyFont("Mukta Regular", FontFamily(Font(R.font.mukta_regular))),
+            MyFont("Mukta SemiBold", FontFamily(Font(R.font.mukta_semi_bold))),
+            MyFont("Open Sans Ital", FontFamily(Font(R.font.open_sans_italic_variable_font_wdth))),
+            MyFont("Playball", FontFamily(Font(R.font.playball_regular))),
+            MyFont("Poppins Medium", FontFamily(Font(R.font.poppins_medium))),
+            MyFont("Poppins Regular", FontFamily(Font(R.font.poppins_regular))),
+            MyFont("Poppins SemiBold", FontFamily(Font(R.font.poppins_semi_bold))),
+            MyFont("Raleway Dots", FontFamily(Font(R.font.raleway_dots_regular))),
+            MyFont("Righteous", FontFamily(Font(R.font.righteous_regular))),
+            MyFont("Road Rage", FontFamily(Font(R.font.road_rage))),
+            MyFont("Roboto Cond Bold", FontFamily(Font(R.font.roboto_condensed_bold))),
+            MyFont("Roboto Cond Bold Ital", FontFamily(Font(R.font.roboto_condensed_bold_italic))),
+            MyFont("Roboto Cond Ital", FontFamily(Font(R.font.roboto_condensed_italic))),
+            MyFont("Roboto Cond Light", FontFamily(Font(R.font.roboto_condensed_light))),
+            MyFont("Roboto Cond Light Ital", FontFamily(Font(R.font.roboto_condensed_light_italic))),
+            MyFont("Roboto Cond Regular", FontFamily(Font(R.font.roboto_condensed_regular))),
+            MyFont("Roboto Mono Bold", FontFamily(Font(R.font.roboto_mono_bold))),
+            MyFont("Roboto Mono Bold Ital", FontFamily(Font(R.font.roboto_mono_bold_italic))),
+            MyFont("Roboto Mono Ital", FontFamily(Font(R.font.roboto_mono_italic))),
+            MyFont("Roboto Mono Light", FontFamily(Font(R.font.roboto_mono_light))),
+            MyFont("Roboto Mono Light Ital", FontFamily(Font(R.font.roboto_mono_light_italic))),
+            MyFont("Roboto Mono Medium", FontFamily(Font(R.font.roboto_mono_medium))),
+            MyFont("Roboto Mono Medium Ital", FontFamily(Font(R.font.roboto_mono_medium_italic))),
+            MyFont("Roboto Mono Regular", FontFamily(Font(R.font.roboto_mono_regular))),
+            MyFont("Roboto Mono Thin", FontFamily(Font(R.font.roboto_mono_thin))),
+            MyFont("Roboto Mono Thin Ital", FontFamily(Font(R.font.roboto_mono_thin_italic))),
+            MyFont("Roboto Slab Bold", FontFamily(Font(R.font.roboto_slab_bold))),
+            MyFont("Roboto Slab Light", FontFamily(Font(R.font.roboto_slab_light))),
+            MyFont("Roboto Slab Regular", FontFamily(Font(R.font.roboto_slab_regular))),
+            MyFont("Roboto Slab Thin", FontFamily(Font(R.font.roboto_slab_thin))),
+            MyFont("Redoka One", FontFamily(Font(R.font.rredoka_one_regular))),
+            MyFont("Satisfy One", FontFamily(Font(R.font.satisfy_one))),
+            MyFont("Starlight One", FontFamily(Font(R.font.starlight_one))),
+            MyFont("Telex", FontFamily(Font(R.font.telex_regular))),
+            MyFont("Unispace Bold", FontFamily(Font(R.font.unispace_bold))),
+            MyFont("Unispace Bold Ital", FontFamily(Font(R.font.unispace_bold_italic))),
+            MyFont("Unispace Ital", FontFamily(Font(R.font.unispace_italic))),
+            MyFont("Unispace One", FontFamily(Font(R.font.unispace_one))),
+            MyFont("Wedgie Regular", FontFamily(Font(R.font.wedgie_regular))),
+            MyFont("Where My Keys", FontFamily(Font(R.font.where_my_keys)))
         )
     }
 
-    val weights = listOf(
-        "Thin" to FontWeight.Thin,
-        "Regular" to FontWeight.Normal,
-        "Medium" to FontWeight.Medium,
-        "Bold" to FontWeight.Bold,
-        "Black" to FontWeight.Black
-    )
-
-    val colorList = listOf(
-        Color.Black, Color.White, Color.Red, Color.Blue, Color(0xFF4CAF50),
-        Color.Magenta, Color.Cyan, Color.Gray, Color(0xFFFF9800),
-        Color(0xFF9C27B0), Color(0xFFFFEB3B), Color.Transparent
-    )
-
     Scaffold(
-        bottomBar = {
-            Column(modifier = Modifier.background(Color.White)) {
-                HorizontalDivider()
-                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                    when (currentTool) {
-                        SelectedTool.SIZE -> {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = { if (fontSize > 10) fontSize -= 2f }) { Icon(Icons.Default.Remove, null) }
-
-                                // --- MEDIUM SLIDER FIXED ---
-                                Slider(
-                                    value = fontSize,
-                                    onValueChange = { fontSize = it },
-                                    valueRange = 10f..120f,
-                                    modifier = Modifier.weight(1f).height(20.dp),
-                                    track = { sliderState ->
-                                        SliderDefaults.Track(
-                                            sliderState = sliderState,
-                                            modifier = Modifier.height(6.dp) // <--- Medium thickness
-                                        )
-                                    }
-                                )
-
-                                IconButton(onClick = { if (fontSize < 120) fontSize += 2f }) { Icon(Icons.Default.Add, null) }
-                                Text("${fontSize.toInt()}sp")
-                            }
+        topBar = {
+            TopAppBar(
+                title = { Text(if(isSelectionMode) "Select Styles" else "Text Designer Pro", fontWeight = FontWeight.Bold) },
+                actions = {
+                    // Top Share is now only for APP SHARING (Simple Link)
+                    IconButton(onClick = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, "Hey! Use this amazing app to create fancy fonts: [Link]")
                         }
-                        SelectedTool.COLOR -> {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    listOf("Text", "BG", "Border").forEach { target ->
-                                        FilterChip(selected = activeColorTarget == target, onClick = { activeColorTarget = target }, label = { Text(target) })
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    items(colorList) { color ->
-                                        Box(
-                                            modifier = Modifier.size(35.dp).clip(CircleShape).background(if (color == Color.Transparent) Color.LightGray.copy(0.3f) else color)
-                                                .border(2.dp, if ((activeColorTarget == "Text" && textColor == color) || (activeColorTarget == "BG" && backgroundColor == color) || (activeColorTarget == "Border" && borderColor == color)) Color.Blue else Color.LightGray, CircleShape)
-                                                .clickable {
-                                                    when (activeColorTarget) {
-                                                        "Text" -> textColor = color
-                                                        "BG" -> backgroundColor = color
-                                                        "Border" -> borderColor = color
-                                                    }
-                                                }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        SelectedTool.STYLE -> {
-                            Column {
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    items(weights) { (name, weight) ->
-                                        FilterChip(selected = selectedWeight == weight, onClick = { selectedWeight = weight }, label = { Text(name) })
-                                    }
-                                }
-                                FilterChip(selected = isItalic, onClick = { isItalic = !isItalic }, label = { Text("Italic") }, leadingIcon = { if(isItalic) Icon(Icons.Default.Check, null) })
-                            }
-                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share App"))
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share App")
+                    }
+                    IconButton(onClick = { Toast.makeText(context, "Saved!", Toast.LENGTH_SHORT).show() }) {
+                        Icon(Icons.Default.SaveAlt, "Save")
                     }
                 }
-                NavigationBar(containerColor = Color.White) {
-                    NavigationBarItem(selected = currentTool == SelectedTool.SIZE, onClick = { currentTool = SelectedTool.SIZE }, icon = { Icon(Icons.Default.TextFields, null) }, label = { Text("Size") })
-                    NavigationBarItem(selected = currentTool == SelectedTool.STYLE, onClick = { currentTool = SelectedTool.STYLE }, icon = { Icon(Icons.Default.FormatBold, null) }, label = { Text("Style") })
-                    NavigationBarItem(selected = currentTool == SelectedTool.COLOR, onClick = { currentTool = SelectedTool.COLOR }, icon = { Icon(Icons.Default.Palette, null) }, label = { Text("Color") })
+            )
+        },
+        bottomBar = {
+            Column(modifier = Modifier.background(Color.White).fillMaxWidth()) {
+                Box(modifier = Modifier.padding(horizontal = 12.dp).height(70.dp)) {
+                    // Logic to collect selected stylized texts for sharing
+                    val selectedTexts = if (isSelectionMode) {
+                        selectedIndices.filter { it.value }.map { (idx, _) ->
+                            getProcessedText(titleText, textCase, selectedFancyStyle)
+                        }.joinToString("\n\n")
+                    } else {
+                        getProcessedText(titleText, textCase, selectedFancyStyle)
+                    }
+
+                    when (currentTool) {
+                        AppTool.FONT -> FontSelector(onSizeChange = { fontSize = it })
+                        AppTool.COLOR -> ColorSelector(onColorPick = { textColor = it }, onGradientToggle = { useGradient = it })
+                        AppTool.STYLE -> StyleSelector(useShadow, useGlow, { useShadow = it }, { useGlow = it })
+                        AppTool.CASE -> CaseSelector { textCase = it }
+                        AppTool.COMBO -> ComboSelector(fullFontList, { fontA = it }, { fontB = it }, { activeComboMode = it })
+                        AppTool.BG -> BackgroundSelector { bgColor = it }
+                        AppTool.MAGIC -> FancySelector { selectedFancyStyle = it }
+                        AppTool.EXPORT -> ExportPanel(
+                            textToShare = selectedTexts,
+                            isSelecting = isSelectionMode,
+                            onToggleSelection = { isSelectionMode = it },
+                            onClear = { selectedIndices.clear(); isSelectionMode = false }
+                        )
+                    }
+                }
+
+                ScrollableTabRow(selectedTabIndex = currentTool.ordinal, edgePadding = 16.dp, containerColor = Color.White, divider = {}) {
+                    AppTool.entries.forEach { tool ->
+                        Tab(
+                            selected = currentTool == tool,
+                            onClick = { currentTool = tool },
+                            icon = { Icon(when (tool) {
+                                AppTool.FONT -> Icons.Default.TextFields
+                                AppTool.COLOR -> Icons.Default.Palette
+                                AppTool.STYLE -> Icons.Default.AutoFixHigh
+                                AppTool.CASE -> Icons.Default.FormatSize
+                                AppTool.COMBO -> Icons.Default.Category
+                                AppTool.BG -> Icons.Default.Wallpaper
+                                AppTool.MAGIC -> Icons.Default.Stars
+                                AppTool.EXPORT -> Icons.Default.IosShare
+                            }, null) },
+                            text = { Text(tool.name, fontSize = 10.sp) }
+                        )
+                    }
                 }
             }
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
-            OutlinedTextField(value = titleText, onValueChange = { titleText = it }, label = { Text("Enter Title") }, modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(fontList) { fontItem ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(text = fontItem.first, fontSize = 11.sp, color = Color.Gray)
-                            Box(
-                                modifier = Modifier.fillMaxWidth().background(backgroundColor, RoundedCornerShape(8.dp)).border(1.dp, borderColor, RoundedCornerShape(8.dp)).padding(24.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = titleText.ifEmpty { "Text Generator" },
-                                    modifier = Modifier
-                                        .fillMaxWidth()            // 1. पूरी चौड़ाई लें
-                                        .padding(horizontal = 4.dp, vertical = 2.dp), // 2. साइड से थोड़ी जगह छोड़ने के लिए
-                                    textAlign = TextAlign.Start,   // 3. Text को Left side में करने के लिए
-                                    style = TextStyle(
-                                        fontFamily = fontItem.second,
-                                        fontSize = fontSize.sp,
-                                        color = textColor,
-                                        fontWeight = selectedWeight,
-                                        fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal
-                                    )
+            OutlinedTextField(
+                value = titleText,
+                onValueChange = { titleText = it },
+                label = { Text("Write your title...") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(15.dp)) {
+                itemsIndexed(fullFontList) { index, fontItem ->
+                    val processedText = getProcessedText(titleText, textCase, selectedFancyStyle)
+                    val isSelected = selectedIndices[index] ?: false
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            if (isSelectionMode) selectedIndices[index] = !isSelected
+                        },
+                        colors = CardDefaults.cardColors(containerColor = bgColor),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        border = if (isSelectionMode && isSelected) BorderStroke(2.dp, Color(0xFFE91E63)) else null
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isSelectionMode) {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = { selectedIndices[index] = it },
+                                    modifier = Modifier.padding(start = 8.dp)
                                 )
+                            }
+                            Box(modifier = Modifier.padding(20.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                val words = processedText.split(" ")
+                                Row {
+                                    words.forEachIndexed { i, word ->
+                                        val finalFont = when(activeComboMode) {
+                                            1 -> if (i % 2 == 0) fontA else fontB
+                                            2 -> if (i == 0) fontA else fontB
+                                            else -> fontItem.family
+                                        }
+                                        Text(
+                                            text = "$word ",
+                                            fontFamily = finalFont,
+                                            fontSize = fontSize.sp,
+                                            color = if (useGradient) Color.Unspecified else textColor,
+                                            style = TextStyle(
+                                                brush = if (useGradient) Brush.linearGradient(listOf(textColor, Color.Cyan)) else null,
+                                                shadow = if (useShadow) Shadow(Color.Black.copy(0.5f), Offset(5f, 5f), 10f)
+                                                else if (useGlow) Shadow(textColor.copy(0.8f), Offset(0f, 0f), 25f) else null
+                                            )
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+// --- SELECTORS (Remain Same) ---
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FontSelector(onSizeChange: (Float) -> Unit) {
+    Column {
+        Text("Text Size: Medium Slider", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        var sliderPos by remember { mutableFloatStateOf(35f) }
+        Slider(value = sliderPos, onValueChange = { sliderPos = it; onSizeChange(it) }, valueRange = 20f..100f,
+            track = { SliderDefaults.Track(sliderState = it, modifier = Modifier.height(10.dp)) })
+    }
+}
+
+@Composable
+fun ColorSelector(onColorPick: (Color) -> Unit, onGradientToggle: (Boolean) -> Unit) {
+    var gradCheck by remember { mutableStateOf(false) }
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Gradient Mode", fontSize = 12.sp)
+            Checkbox(checked = gradCheck, onCheckedChange = { gradCheck = it; onGradientToggle(it) })
+        }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(myCustomPalette) { Box(Modifier.size(45.dp).clip(CircleShape).background(it).border(1.dp, Color.LightGray, CircleShape).clickable { onColorPick(it) }) }
+        }
+    }
+}
+
+@Composable
+fun CaseSelector(onCaseChange: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        Button(onClick = { onCaseChange(1) }) { Text("UPPER") }
+        Button(onClick = { onCaseChange(2) }) { Text("lower") }
+        Button(onClick = { onCaseChange(3) }) { Text("Title") }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ComboSelector(fonts: List<MyFont>, setA: (FontFamily) -> Unit, setB: (FontFamily) -> Unit, setMode: (Int) -> Unit) {
+    Column {
+        Row {
+            AssistChip(onClick = { setMode(1) }, label = { Text("A-B-A-B") })
+            Spacer(Modifier.width(8.dp)); AssistChip(onClick = { setMode(2) }, label = { Text("First-Rest") })
+            Spacer(Modifier.width(8.dp)); AssistChip(onClick = { setMode(0) }, label = { Text("Reset") })
+        }
+        LazyRow {
+            items(fonts) {
+                Button(onClick = { setA(it.family) }, Modifier.padding(4.dp)) { Text("A:${it.name}", fontSize = 9.sp) }
+                Button(onClick = { setB(it.family) }, Modifier.padding(4.dp)) { Text("B:${it.name}", fontSize = 9.sp) }
+            }
+        }
+    }
+}
+
+@Composable
+fun StyleSelector(shadow: Boolean, glow: Boolean, onShadow: (Boolean) -> Unit, onGlow: (Boolean) -> Unit) {
+    Row {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Shadow", fontSize = 10.sp); Switch(shadow, onShadow) }
+        Spacer(Modifier.width(20.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Glow", fontSize = 10.sp); Switch(glow, onGlow) }
+    }
+}
+
+@Composable
+fun BackgroundSelector(onBgPick: (Color) -> Unit) {
+    Column {
+        Text("Select Background Color:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(myCustomPalette) { Box(Modifier.size(45.dp).background(it).border(1.dp, Color.Gray).clickable { onBgPick(it) }) }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FancySelector(onStyle: (String) -> Unit) {
+    val styles = listOf("None", "Bubble", "Square", "Stars")
+    LazyRow { items(styles) { AssistChip(onClick = { onStyle(it) }, label = { Text(it) }, modifier = Modifier.padding(4.dp)) } }
+}
+
+@Composable
+fun ExportPanel(textToShare: String, isSelecting: Boolean, onToggleSelection: (Boolean) -> Unit, onClear: () -> Unit) {
+    val context = LocalContext.current
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+        // COPY BUTTON
+        IconButton(onClick = {
+            val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Fancy Text", textToShare))
+            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+        }) { Icon(Icons.Default.ContentCopy, null) }
+
+        // MAIN SHARE / SEND BUTTON
+        IconButton(onClick = {
+            if (!isSelecting) {
+                // First click: Start Selection
+                onToggleSelection(true)
+            } else {
+                // Second click: If something is selected, Share it
+                if (textToShare.isNotBlank()) {
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, textToShare)
+                    }
+                    context.startActivity(Intent.createChooser(sendIntent, "Share Styles"))
+                    onClear() // Exit selection after sharing
+                } else {
+                    Toast.makeText(context, "Select at least one style!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }) {
+            // Icon changes from Share to Send in Selection Mode
+            Icon(if (isSelecting) Icons.Default.Send else Icons.Default.Share,
+                contentDescription = null,
+                tint = if(isSelecting) Color(0xFFE91E63) else LocalContentColor.current)
+        }
+
+        // CANCEL BUTTON (Only shows during selection)
+        if (isSelecting) {
+            IconButton(onClick = onClear) { Icon(Icons.Default.Close, null) }
+        }
+    }
+}
+
+fun getProcessedText(input: String, caseType: Int, fancy: String): String {
+    val text = when (caseType) {
+        1 -> input.uppercase()
+        2 -> input.lowercase()
+        3 -> input.split(" ").joinToString(" ") { it.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() } }
+        else -> input
+    }
+    return when (fancy) {
+        "Bubble" -> "Ⓞ $text Ⓞ"
+        "Stars" -> "✨ $text ✨"
+        "Square" -> "[ $text ]"
+        else -> text
     }
 }
