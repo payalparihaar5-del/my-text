@@ -24,10 +24,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
@@ -44,7 +45,8 @@ val myCustomPalette = listOf(
 )
 
 data class MyFont(val name: String, val family: FontFamily)
-enum class AppTool { FONT, COLOR, STYLE, CASE, COMBO, BG, MAGIC, EXPORT }
+// Ise update karein
+enum class AppTool { FONT, COLOR, STYLE, CASE, COMBO, BG, MAGIC, TYPOGRAPHY, EXPORT }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +68,8 @@ fun TextArtApp() {
     var titleText by remember { mutableStateOf("रूह-ए-इश्क Mafia King") }
     var currentTool by remember { mutableStateOf(AppTool.FONT) }
 
-    var fontSize by remember { mutableFloatStateOf(15f) }
+    var fontSize by remember { mutableFloatStateOf(35f) }
+    var fontWeight by remember { mutableStateOf(FontWeight.Normal) }
     var textColor by remember { mutableStateOf(Color.Black) }
     var bgColor by remember { mutableStateOf(Color.White) }
     var useGradient by remember { mutableStateOf(false) }
@@ -78,7 +81,6 @@ fun TextArtApp() {
     var fontA by remember { mutableStateOf<FontFamily>(FontFamily.Default) }
     var fontB by remember { mutableStateOf<FontFamily>(FontFamily.Serif) }
 
-    // --- State for Selection Mode ---
     var isSelectionMode by remember { mutableStateOf(false) }
     val selectedIndices = remember { mutableStateMapOf<Int, Boolean>() }
 
@@ -211,48 +213,36 @@ fun TextArtApp() {
             TopAppBar(
                 title = { Text(if(isSelectionMode) "Select Styles" else "Text Designer Pro", fontWeight = FontWeight.Bold) },
                 actions = {
-                    // Top Share is now only for APP SHARING (Simple Link)
                     IconButton(onClick = {
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, "Hey! Use this amazing app to create fancy fonts: [Link]")
+                            putExtra(Intent.EXTRA_TEXT, "Hey! Use this amazing app: [Link]")
                         }
                         context.startActivity(Intent.createChooser(shareIntent, "Share App"))
-                    }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share App")
-                    }
-                    IconButton(onClick = { Toast.makeText(context, "Saved!", Toast.LENGTH_SHORT).show() }) {
-                        Icon(Icons.Default.SaveAlt, "Save")
-                    }
+                    }) { Icon(Icons.Default.Share, "Share App") }
                 }
             )
         },
         bottomBar = {
             Column(modifier = Modifier.background(Color.White).fillMaxWidth()) {
-                Box(modifier = Modifier.padding(horizontal = 12.dp).height(70.dp)) {
-                    // Logic to collect selected stylized texts for sharing
+                Box(modifier = Modifier.padding(horizontal = 12.dp).height(80.dp), contentAlignment = Alignment.Center) {
+                    val currentProcessed = getProcessedText(titleText, textCase, selectedFancyStyle)
                     val selectedTexts = if (isSelectionMode) {
-                        selectedIndices.filter { it.value }.map { (idx, _) ->
+                        selectedIndices.filter { it.value }.keys.joinToString("\n\n") {
                             getProcessedText(titleText, textCase, selectedFancyStyle)
-                        }.joinToString("\n\n")
-                    } else {
-                        getProcessedText(titleText, textCase, selectedFancyStyle)
-                    }
+                        }
+                    } else currentProcessed
 
                     when (currentTool) {
                         AppTool.FONT -> FontSelector(onSizeChange = { fontSize = it })
-                        AppTool.COLOR -> ColorSelector(onColorPick = { textColor = it }, onGradientToggle = { useGradient = it })
+                        AppTool.COLOR -> ColorSelector({ textColor = it }, { useGradient = it })
                         AppTool.STYLE -> StyleSelector(useShadow, useGlow, { useShadow = it }, { useGlow = it })
                         AppTool.CASE -> CaseSelector { textCase = it }
                         AppTool.COMBO -> ComboSelector(fullFontList, { fontA = it }, { fontB = it }, { activeComboMode = it })
                         AppTool.BG -> BackgroundSelector { bgColor = it }
                         AppTool.MAGIC -> FancySelector { selectedFancyStyle = it }
-                        AppTool.EXPORT -> ExportPanel(
-                            textToShare = selectedTexts,
-                            isSelecting = isSelectionMode,
-                            onToggleSelection = { isSelectionMode = it },
-                            onClear = { selectedIndices.clear(); isSelectionMode = false }
-                        )
+                        AppTool.TYPOGRAPHY -> TypographySelector { fontWeight = it }
+                        AppTool.EXPORT -> ExportPanel(selectedTexts, isSelectionMode, { isSelectionMode = it }, { selectedIndices.clear(); isSelectionMode = false })
                     }
                 }
 
@@ -269,6 +259,7 @@ fun TextArtApp() {
                                 AppTool.COMBO -> Icons.Default.Category
                                 AppTool.BG -> Icons.Default.Wallpaper
                                 AppTool.MAGIC -> Icons.Default.Stars
+                                AppTool.TYPOGRAPHY -> Icons.Default.FormatBold
                                 AppTool.EXPORT -> Icons.Default.IosShare
                             }, null) },
                             text = { Text(tool.name, fontSize = 10.sp) }
@@ -301,36 +292,39 @@ fun TextArtApp() {
                         elevation = CardDefaults.cardElevation(4.dp),
                         border = if (isSelectionMode && isSelected) BorderStroke(2.dp, Color(0xFFE91E63)) else null
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(12.dp)) {
                             if (isSelectionMode) {
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = { selectedIndices[index] = it },
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
+                                Checkbox(checked = isSelected, onCheckedChange = { selectedIndices[index] = it })
                             }
-                            Box(modifier = Modifier.padding(20.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                 val words = processedText.split(" ")
-                                Row {
+                                val annotatedText = buildAnnotatedString {
                                     words.forEachIndexed { i, word ->
-                                        val finalFont = when(activeComboMode) {
+                                        val f = when(activeComboMode) {
                                             1 -> if (i % 2 == 0) fontA else fontB
                                             2 -> if (i == 0) fontA else fontB
                                             else -> fontItem.family
                                         }
-                                        Text(
-                                            text = "$word ",
-                                            fontFamily = finalFont,
-                                            fontSize = fontSize.sp,
-                                            color = if (useGradient) Color.Unspecified else textColor,
-                                            style = TextStyle(
-                                                brush = if (useGradient) Brush.linearGradient(listOf(textColor, Color.Cyan)) else null,
-                                                shadow = if (useShadow) Shadow(Color.Black.copy(0.5f), Offset(5f, 5f), 10f)
-                                                else if (useGlow) Shadow(textColor.copy(0.8f), Offset(0f, 0f), 25f) else null
-                                            )
-                                        )
+                                        withStyle(SpanStyle(fontFamily = f, fontSize = fontSize.sp,fontWeight = fontWeight, color = if (useGradient) Color.Unspecified else textColor)) {
+                                            append(word)
+                                        }
+                                        if (i < words.size - 1) append(" ")
                                     }
                                 }
+
+                                Text(
+                                    text = annotatedText,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    softWrap = true,
+                                    lineHeight = (fontSize * 1.3).sp,
+                                    style = TextStyle(
+                                        brush = if (useGradient) Brush.linearGradient(listOf(textColor, Color.Cyan)) else null,
+                                        shadow = if (useShadow) Shadow(Color.Black.copy(0.5f), Offset(5f, 5f), 10f)
+                                        else if (useGlow) Shadow(textColor.copy(0.8f), Offset(0f, 0f), 25f) else null
+                                    )
+                                )
                             }
                         }
                     }
@@ -340,29 +334,41 @@ fun TextArtApp() {
     }
 }
 
-// --- SELECTORS (Remain Same) ---
+// --- SELECTORS ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FontSelector(onSizeChange: (Float) -> Unit) {
-    Column {
-        Text("Text Size: Medium Slider", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Text Size", fontSize = 12.sp, fontWeight = FontWeight.Bold)
         var sliderPos by remember { mutableFloatStateOf(35f) }
-        Slider(value = sliderPos, onValueChange = { sliderPos = it; onSizeChange(it) }, valueRange = 20f..100f,
-            track = { SliderDefaults.Track(sliderState = it, modifier = Modifier.height(10.dp)) })
+
+        Slider(
+            value = sliderPos,
+            onValueChange = { sliderPos = it; onSizeChange(it) },
+            valueRange = 15f..80f,
+            modifier = Modifier.fillMaxWidth(0.8f), // Isse width screen se thodi choti rahegi
+            track = { sliderState ->
+                SliderDefaults.Track(
+                    sliderState = sliderState,
+                    modifier = Modifier.height(6.dp)
+                )
+            }
+        )
     }
 }
-
 @Composable
 fun ColorSelector(onColorPick: (Color) -> Unit, onGradientToggle: (Boolean) -> Unit) {
     var gradCheck by remember { mutableStateOf(false) }
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Gradient Mode", fontSize = 12.sp)
-            Checkbox(checked = gradCheck, onCheckedChange = { gradCheck = it; onGradientToggle(it) })
-        }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(myCustomPalette) { Box(Modifier.size(45.dp).clip(CircleShape).background(it).border(1.dp, Color.LightGray, CircleShape).clickable { onColorPick(it) }) }
+            Text("Gradient", fontSize = 11.sp); Checkbox(gradCheck, { gradCheck = it; onGradientToggle(it) })
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(myCustomPalette) { Box(Modifier.size(35.dp).clip(CircleShape).background(it).clickable { onColorPick(it) }) }
+            }
         }
     }
 }
@@ -370,9 +376,9 @@ fun ColorSelector(onColorPick: (Color) -> Unit, onGradientToggle: (Boolean) -> U
 @Composable
 fun CaseSelector(onCaseChange: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        Button(onClick = { onCaseChange(1) }) { Text("UPPER") }
-        Button(onClick = { onCaseChange(2) }) { Text("lower") }
-        Button(onClick = { onCaseChange(3) }) { Text("Title") }
+        AssistChip(onClick = { onCaseChange(1) }, label = { Text("UPPER") })
+        AssistChip(onClick = { onCaseChange(2) }, label = { Text("lower") })
+        AssistChip(onClick = { onCaseChange(3) }, label = { Text("Title") })
     }
 }
 
@@ -381,14 +387,14 @@ fun CaseSelector(onCaseChange: (Int) -> Unit) {
 fun ComboSelector(fonts: List<MyFont>, setA: (FontFamily) -> Unit, setB: (FontFamily) -> Unit, setMode: (Int) -> Unit) {
     Column {
         Row {
-            AssistChip(onClick = { setMode(1) }, label = { Text("A-B-A-B") })
-            Spacer(Modifier.width(8.dp)); AssistChip(onClick = { setMode(2) }, label = { Text("First-Rest") })
-            Spacer(Modifier.width(8.dp)); AssistChip(onClick = { setMode(0) }, label = { Text("Reset") })
+            AssistChip(onClick = { setMode(1) }, label = { Text("A-B-A") })
+            Spacer(Modifier.width(4.dp)); AssistChip(onClick = { setMode(2) }, label = { Text("1st-Rest") })
+            Spacer(Modifier.width(4.dp)); AssistChip(onClick = { setMode(0) }, label = { Text("Reset") })
         }
         LazyRow {
             items(fonts) {
-                Button(onClick = { setA(it.family) }, Modifier.padding(4.dp)) { Text("A:${it.name}", fontSize = 9.sp) }
-                Button(onClick = { setB(it.family) }, Modifier.padding(4.dp)) { Text("B:${it.name}", fontSize = 9.sp) }
+                Text(it.name, Modifier.padding(4.dp).clickable { setA(it.family) }.background(Color.LightGray).padding(4.dp), fontSize = 10.sp)
+                Text(it.name, Modifier.padding(4.dp).clickable { setB(it.family) }.background(Color.DarkGray).padding(4.dp), fontSize = 10.sp, color = Color.White)
             }
         }
     }
@@ -396,20 +402,17 @@ fun ComboSelector(fonts: List<MyFont>, setA: (FontFamily) -> Unit, setB: (FontFa
 
 @Composable
 fun StyleSelector(shadow: Boolean, glow: Boolean, onShadow: (Boolean) -> Unit, onGlow: (Boolean) -> Unit) {
-    Row {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Shadow", fontSize = 10.sp); Switch(shadow, onShadow) }
-        Spacer(Modifier.width(20.dp))
-        Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Glow", fontSize = 10.sp); Switch(glow, onGlow) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("Shadow", fontSize = 10.sp); Switch(shadow, onShadow)
+        Spacer(Modifier.width(10.dp))
+        Text("Glow", fontSize = 10.sp); Switch(glow, onGlow)
     }
 }
 
 @Composable
 fun BackgroundSelector(onBgPick: (Color) -> Unit) {
-    Column {
-        Text("Select Background Color:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(myCustomPalette) { Box(Modifier.size(45.dp).background(it).border(1.dp, Color.Gray).clickable { onBgPick(it) }) }
-        }
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(myCustomPalette) { Box(Modifier.size(40.dp).background(it).border(1.dp, Color.Gray).clickable { onBgPick(it) }) }
     }
 }
 
@@ -423,57 +426,63 @@ fun FancySelector(onStyle: (String) -> Unit) {
 @Composable
 fun ExportPanel(textToShare: String, isSelecting: Boolean, onToggleSelection: (Boolean) -> Unit, onClear: () -> Unit) {
     val context = LocalContext.current
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-        // COPY BUTTON
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         IconButton(onClick = {
-            val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Fancy Text", textToShare))
+            val cb = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cb.setPrimaryClip(android.content.ClipData.newPlainText("Text", textToShare))
             Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
         }) { Icon(Icons.Default.ContentCopy, null) }
 
-        // MAIN SHARE / SEND BUTTON
         IconButton(onClick = {
-            if (!isSelecting) {
-                // First click: Start Selection
-                onToggleSelection(true)
-            } else {
-                // Second click: If something is selected, Share it
+            if (!isSelecting) onToggleSelection(true)
+            else {
                 if (textToShare.isNotBlank()) {
-                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, textToShare)
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, "Share Styles"))
-                    onClear() // Exit selection after sharing
-                } else {
-                    Toast.makeText(context, "Select at least one style!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, textToShare) }
+                    context.startActivity(Intent.createChooser(intent, "Share"))
+                    onClear()
                 }
             }
-        }) {
-            // Icon changes from Share to Send in Selection Mode
-            Icon(if (isSelecting) Icons.Default.Send else Icons.Default.Share,
-                contentDescription = null,
-                tint = if(isSelecting) Color(0xFFE91E63) else LocalContentColor.current)
-        }
+        }) { Icon(if (isSelecting) Icons.Default.Send else Icons.Default.Share, null, tint = if(isSelecting) Color.Red else Color.Black) }
 
-        // CANCEL BUTTON (Only shows during selection)
-        if (isSelecting) {
-            IconButton(onClick = onClear) { Icon(Icons.Default.Close, null) }
-        }
+        if (isSelecting) IconButton(onClick = onClear) { Icon(Icons.Default.Close, null) }
     }
 }
 
 fun getProcessedText(input: String, caseType: Int, fancy: String): String {
-    val text = when (caseType) {
+    val t = when (caseType) {
         1 -> input.uppercase()
         2 -> input.lowercase()
-        3 -> input.split(" ").joinToString(" ") { it.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() } }
+        3 -> input.split(" ").joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
         else -> input
     }
     return when (fancy) {
-        "Bubble" -> "Ⓞ $text Ⓞ"
-        "Stars" -> "✨ $text ✨"
-        "Square" -> "[ $text ]"
-        else -> text
+        "Bubble" -> "Ⓞ $t Ⓞ"
+        "Stars" -> "✨ $t ✨"
+        "Square" -> "[ $t ]"
+        else -> t
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TypographySelector(onWeightChange: (FontWeight) -> Unit) {
+    val weights = listOf(
+        "Thin" to FontWeight.Thin,
+        "Light" to FontWeight.Light,
+        "Regular" to FontWeight.Normal,
+        "Medium" to FontWeight.Medium,
+        "SemiBold" to FontWeight.SemiBold,
+        "Bold" to FontWeight.Bold
+    )
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(weights) { (name, weight) ->
+            AssistChip(
+                onClick = { onWeightChange(weight) },
+                label = { Text(name, fontSize = 11.sp) }
+            )
+        }
     }
 }
